@@ -62,4 +62,3 @@ print(c)
 print(th.softmax(c, dim=1))
 
 
-
