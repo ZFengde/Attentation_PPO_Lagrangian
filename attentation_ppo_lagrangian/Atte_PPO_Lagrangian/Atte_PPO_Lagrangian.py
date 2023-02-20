@@ -179,11 +179,12 @@ class Atte_PPO_Lagrangian(OnPolicyAlgorithm):
                 values, log_prob, entropy, c_values, attention = self.policy.evaluate_actions(rollout_data.observations, actions)
                 values = values.flatten()
                 c_values = c_values.flatten()
+                attention = attention.flatten()
                 
                 # Normalize advantage
                 # TODO, think about detach here
-                advantages = rollout_data.advantages * attention
-                c_advantages = rollout_data.c_advantages * (1 - attention)
+                advantages = attention * rollout_data.advantages
+                c_advantages = (1 - attention) * rollout_data.c_advantages 
                 if self.normalize_advantage:
                     advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8) # so this is the normalize method that make mean to 0, while max of the advantaged value could be large
                     # c_advantages = (c_advantages - c_advantages.mean()) / (c_advantages.std() + 1e-8)
@@ -230,10 +231,11 @@ class Atte_PPO_Lagrangian(OnPolicyAlgorithm):
                 value_losses.append(value_loss.item())
 
                 # Attentaion loss calculated here
-                # TODO, why this become inf, it's because c_returns could be 0
-                # importance = th.softmax(th.stack((rollout_data.returns, rollout_data.c_returns)), dim=1)
+                # TODO, think about the attention loss, use masksed data of original data
 
-                # attention_loss = F.mse_loss(rollout_data.returns/rollout_data.c_returns, attention.squeeze(0))
+                importance = th.softmax(th.stack((rollout_data.old_values, rollout_data.old_c_values)), dim=1)
+                attention_target = importance[0]/importance[1]
+                attention_loss = F.mse_loss(attention_target, attention)
 
                 # Entropy loss favor exploration
                 if entropy is None:
@@ -246,8 +248,8 @@ class Atte_PPO_Lagrangian(OnPolicyAlgorithm):
 
                 # This become very large since c_value_loss is high
                 if self.use_constraint:
-                    # loss = policy_loss + self.vf_coef * (value_loss + c_value_loss) + 0.5 * attention_loss
-                    loss = policy_loss + self.vf_coef * (value_loss + c_value_loss)
+                    loss = policy_loss + self.vf_coef * (value_loss + c_value_loss) + 0.5 * attention_loss
+                    # loss = policy_loss + self.vf_coef * (value_loss + c_value_loss)
                 else:
                     loss = policy_loss + self.vf_coef * value_loss
 

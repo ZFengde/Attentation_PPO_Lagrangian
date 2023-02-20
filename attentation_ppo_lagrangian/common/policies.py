@@ -71,8 +71,8 @@ class attention_network(nn.Module):
         
     def forward(self, input):
 
-        x = th.relu(self.linear_layer_1(input))
-        x = th.relu(self.linear_layer_2(x))
+        x = th.tanh(self.linear_layer_1(input))
+        x = th.tanh(self.linear_layer_2(x))
         # make sure attention is among 0-1
         attention = (th.tanh(self.output_layer(x)) + 1) / 2
 
