@@ -1,1 +1,6 @@
-*test
+*test.py
+.gitignore
+*logs
+*models
+*.pyc
+.vscode
