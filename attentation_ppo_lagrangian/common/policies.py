@@ -73,7 +73,8 @@ class attention_network(nn.Module):
 
         x = th.relu(self.linear_layer_1(input))
         x = th.relu(self.linear_layer_2(x))
-        attention = th.tanh(self.output_layer(x))
+        # make sure attention is among 0-1
+        attention = (th.tanh(self.output_layer(x)) + 1) / 2
 
         return attention
 
@@ -84,7 +85,7 @@ class attention_mask_layer(nn.Module):
         self.c_policy_net = nn.Linear(feat_dim, out_dim)
 
     def forward(self, feature, attention): # 3, 64 & 3, 1
-        output = (1 + attention) * self.policy_net(feature) + (1 - attention) * self.c_policy_net(feature)
+        output = th.relu((1 + attention) * self.policy_net(feature) + (1 - attention) * self.c_policy_net(feature))
         return output
 
 class ActorCriticPolicy(BasePolicy):
