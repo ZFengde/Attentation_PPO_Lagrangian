@@ -248,8 +248,8 @@ class Atte_PPO_Lagrangian(OnPolicyAlgorithm):
 
                 # This become very large since c_value_loss is high
                 if self.use_constraint:
-                    loss = policy_loss + self.vf_coef * (value_loss + c_value_loss) + 0.5 * attention_loss
-                    # loss = policy_loss + self.vf_coef * (value_loss + c_value_loss)
+                    # loss = policy_loss + self.vf_coef * (value_loss + c_value_loss) + 0.5 * attention_loss
+                    loss = policy_loss + self.vf_coef * (value_loss + c_value_loss)
                 else:
                     loss = policy_loss + self.vf_coef * value_loss
 
